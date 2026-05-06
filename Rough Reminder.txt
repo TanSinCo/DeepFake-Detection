@@ -1,0 +1,692 @@
+
+deepfake-detector/
+│
+├── data/
+│   ├── raw/
+│   │   ├── ffpp/
+│   │   ├── uadfv/
+│   │   └── dfdc/
+│   │
+│   └── processed/
+│
+├── src/
+│   ├── config.py
+│   ├── dataset.py
+│   │
+│   ├── preprocess/
+│   │   ├── video.py
+│   │   ├── roi.py
+│   │   ├── rppg.py
+│   │   ├── blink.py
+│   │   ├── motion.py
+│   │   └── window.py
+│   │
+│   ├── models/
+│   │   ├── lstm_model.py
+│   │   ├── vit_model.py
+│   │   └── fusion_model.py
+│   │
+│   ├── train.py
+│   └── inference.py
+│
+├── notebooks/
+│   └── debug.ipynb
+│
+├── requirements.txt
+└── README.md
+
+# 🧠 COMPLETE PROJECT ROADMAP — ALL PHASES
+
+This is the full architecture of your deepfake detection system from raw video to final prediction.
+
+Your system is fundamentally:
+
+```text id="6lksv4"
+Physiological + Behavioral Deepfake Detection
+```
+
+not just a normal CNN classifier.
+
+---
+
+# 🔥 HIGH-LEVEL PIPELINE
+
+```text id="eyljcz"
+Video
+ → Face Processing
+ → Biological Signal Extraction
+ → Motion Analysis
+ → Temporal Learning
+ → Multi-Feature Fusion
+ → Fake / Real Classification
+```
+
+---
+
+# 🧱 PHASE 0 — PROJECT FOUNDATION
+
+---
+
+## 🎯 Goal
+
+Create scalable architecture and dataset structure.
+
+---
+
+## ✅ What happens
+
+* folder structure
+* metadata.csv
+* dataset indexing
+* dependency setup
+* virtual environment
+* reproducible pipeline
+
+---
+
+## 🧠 Why important
+
+Without this:
+
+* project becomes unmaintainable
+* scaling datasets becomes chaotic
+
+---
+
+# 🧱 PHASE 1 — VIDEO + LANDMARK PIPELINE
+
+---
+
+# 🎯 Goal
+
+Convert raw video into analyzable facial geometry.
+
+---
+
+## ✅ What happens
+
+* load video
+* reduce FPS (30 → 15)
+* resize frames
+* detect face mesh
+* extract 478 landmarks
+
+---
+
+## 🧠 Output
+
+```text id="gq0a3l"
+Frames: (T, 224, 224, 3)
+Landmarks: (T, 478, 2)
+```
+
+---
+
+## 🧠 Why important
+
+Landmarks become the foundation for:
+
+* ROI extraction
+* blink analysis
+* motion analysis
+
+---
+
+# 🧱 PHASE 2 — ROI EXTRACTION
+
+---
+
+# 🎯 Goal
+
+Extract meaningful skin regions.
+
+---
+
+## ✅ What happens
+
+Polygon masks created for:
+
+* cheeks
+* chin
+* forehead
+
+---
+
+## 🧠 Why important
+
+rPPG only works reliably on stable skin regions.
+
+---
+
+## 🧠 Output
+
+```text id="jlwm1p"
+ROI regions
+```
+
+per frame.
+
+---
+
+# 🧱 PHASE 3 — rPPG EXTRACTION
+
+---
+
+# 🎯 Goal
+
+Extract biological pulse signal.
+
+---
+
+## ✅ What happens
+
+For each ROI:
+
+* extract mean RGB
+* create temporal RGB sequence
+* apply CHROM method
+
+---
+
+## 🧠 Output
+
+```text id="jlwm2p"
+(T, 5)
+```
+
+5 physiological signals.
+
+---
+
+## 🧠 Why important
+
+Deepfakes often fail to preserve:
+
+* pulse consistency
+* regional synchronization
+
+---
+
+# 🧱 PHASE 4 — FILTERING + NORMALIZATION
+
+---
+
+# 🎯 Goal
+
+Clean biological signal.
+
+---
+
+## ✅ What happens
+
+* Butterworth bandpass filter
+* isolate pulse frequencies
+* remove noise
+* z-score normalization
+
+---
+
+## 🧠 Why important
+
+Raw signal is noisy and unstable.
+
+---
+
+## 🧠 Output
+
+```text id="jlwm3p"
+Filtered rPPG
+```
+
+---
+
+# 🧱 PHASE 5 — WINDOW SEGMENTATION
+
+---
+
+# 🎯 Goal
+
+Convert long signal into temporal chunks.
+
+---
+
+## ✅ What happens
+
+Split:
+
+```text id="jlwm4p"
+120-frame signal
+```
+
+into:
+
+```text id="jlwm5p"
+6-second windows
+```
+
+---
+
+## Example
+
+```text id="jlwm6p"
+Frames 0–89
+Frames 45–134
+Frames 90–179
+```
+
+if overlap used.
+
+---
+
+## 🧠 Why important
+
+LSTM learns sequences, not entire long videos.
+
+---
+
+## 🧠 Output
+
+```text id="jlwm7p"
+(window_size, features)
+```
+
+---
+
+# 🧱 PHASE 6 — EYE BLINK ANALYSIS
+
+---
+
+# 🎯 Goal
+
+Detect unnatural blinking behavior.
+
+---
+
+## ✅ What happens
+
+Using eye landmarks:
+
+* compute EAR (Eye Aspect Ratio)
+* detect blink open/close
+* analyze blink timing
+
+---
+
+## Features extracted
+
+* blink count
+* blink duration
+* blink frequency
+* abnormal stillness
+
+---
+
+## 🧠 Why important
+
+Deepfakes often:
+
+* blink unnaturally
+* blink too little
+* blink inconsistently
+
+---
+
+# 🧱 PHASE 7 — MICRO-MOTION ANALYSIS
+
+---
+
+# 🎯 Goal
+
+Analyze subtle facial movement consistency.
+
+---
+
+## ✅ What happens
+
+Track landmark motion:
+
+* cheeks
+* jaw
+* eyebrows
+* forehead
+
+---
+
+## Motion methods
+
+* Euclidean displacement
+* optical flow
+* temporal consistency
+
+---
+
+## 🧠 Why important
+
+Deepfakes struggle with:
+
+* coherent facial micro-motion
+* stable geometric consistency
+
+---
+
+# 🧱 PHASE 8 — FEATURE FUSION
+
+---
+
+# 🎯 Goal
+
+Combine all modalities.
+
+---
+
+## Inputs combined
+
+* filtered rPPG
+* blink features
+* motion features
+
+---
+
+## Fusion method
+
+Likely:
+
+```text id="7g00nl"
+concatenation
+```
+
+---
+
+## 🧠 Why important
+
+Single-feature systems are weak.
+
+Fusion improves:
+
+* robustness
+* generalization
+* explainability
+
+---
+
+# 🧱 PHASE 9 — TEMPORAL LEARNING (LSTM)
+
+---
+
+# 🎯 Goal
+
+Learn temporal biological patterns.
+
+---
+
+## ✅ What happens
+
+LSTM analyzes:
+
+* rPPG sequences
+* blink timing
+
+---
+
+## 🧠 Why LSTM?
+
+Because:
+
+```text id="jlwm8p"
+time consistency matters
+```
+
+---
+
+## LSTM learns
+
+* temporal rhythm
+* pulse stability
+* blink cadence
+
+---
+
+# 🧱 PHASE 10 — ViT MICRO-MOTION MODEL
+
+---
+
+# 🎯 Goal
+
+Analyze spatial-temporal motion patterns.
+
+---
+
+## ✅ What happens
+
+ViT processes:
+
+* motion maps
+* landmark movement
+* frame-level geometry
+
+---
+
+## 🧠 Why ViT?
+
+ViT is good at:
+
+* global relationships
+* attention modeling
+* subtle spatial patterns
+
+---
+
+# 🧱 PHASE 11 — FINAL FUSION MODEL
+
+---
+
+# 🎯 Goal
+
+Combine outputs from all branches.
+
+---
+
+## Inputs
+
+* LSTM outputs
+* ViT outputs
+* handcrafted features
+
+---
+
+## Output
+
+```text id="jlwm9p"
+Fake / Real probability
+```
+
+---
+
+# 🧠 Why important
+
+Final decision should use:
+
+* biology
+* geometry
+* motion
+* temporal consistency
+
+Together.
+
+---
+
+# 🧱 PHASE 12 — TRAINING PIPELINE
+
+---
+
+# 🎯 Goal
+
+Train model robustly.
+
+---
+
+## ✅ What happens
+
+* train/val/test split
+* BCE loss
+* optimizer
+* checkpointing
+* early stopping
+
+---
+
+## Metrics
+
+* Accuracy
+* F1-score
+* ROC-AUC
+* Precision
+* Recall
+
+---
+
+# 🧱 PHASE 13 — CROSS-DATASET TESTING
+
+---
+
+# 🎯 Goal
+
+Test generalization.
+
+---
+
+## Example
+
+Train:
+
+```text id="jlwm0q"
+FaceForensics++
+```
+
+Test:
+
+```text id="1p7j6d"
+UADFV
+DFDC
+```
+
+---
+
+## 🧠 Why important
+
+Real detector must generalize.
+
+Otherwise:
+
+```text id="2w7f1x"
+dataset memorization
+```
+
+happens.
+
+---
+
+# 🧱 PHASE 14 — INFERENCE SYSTEM
+
+---
+
+# 🎯 Goal
+
+Real-world prediction pipeline.
+
+---
+
+## Input
+
+```text id="jlwm1q"
+video.mp4
+```
+
+---
+
+## Output
+
+```text id="8xbv3x"
+Fake Probability: 92%
+```
+
+---
+
+## Optional
+
+* confidence score
+* explainability graphs
+* ROI visualization
+
+---
+
+# 🧱 PHASE 15 — OPTIMIZATION + DEPLOYMENT
+
+---
+
+# 🎯 Goal
+
+Make system usable.
+
+---
+
+## Possible improvements
+
+* ONNX export
+* TensorRT
+* quantization
+* batching
+* GPU optimization
+
+---
+
+# 🧠 FINAL SYSTEM ARCHITECTURE
+
+```text id="jlwm2q"
+Video
+ → Face Mesh
+ → ROI Extraction
+ → rPPG
+ → Filtering
+ → Windowing
+ → Blink Features
+ → Motion Features
+ → LSTM
+ → ViT
+ → Feature Fusion
+ → Classification
+```
+
+---
+
+# 🧠 MOST IMPORTANT PHASES
+
+If I rank by importance:
+
+| Phase           | Importance     |
+| --------------- | -------------- |
+| ROI extraction  | extremely high |
+| rPPG extraction | extremely high |
+| filtering       | extremely high |
+| feature fusion  | high           |
+| motion analysis | high           |
+| blink analysis  | medium-high    |
+| deployment      | lower          |
+
+---
+
+# 🧠 WHAT MAKES YOUR PROJECT STRONG
+
+Most beginner projects:
+
+```text id="jlwm3q"
+frame → CNN → fake/real
+```
+
+Your system:
+
+```text id="9n0gri"
+physiology + behavior + motion
+```
+
+That’s much closer to research-grade thinking.
