@@ -7,6 +7,7 @@ __pycache__/
 
 # Jupyter
 .ipynb_checkpoints/
+notebooks/
 
 # VSCode
 .vscode/
@@ -15,8 +16,18 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Large processed data
+# Raw datasets
+data/raw/
+
+# Processed datasets
 data/processed/
 
-# Temporary
+# Metadata CSV
+data/*.csv
+
+# Model checkpoints
+checkpoints/
+*.pth
+
+# Logs
 *.log
