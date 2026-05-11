@@ -1,41 +1,126 @@
 import os
 import pandas as pd
 
-BASE_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "raw", "ffpp")
-BASE_DIR = os.path.abspath(BASE_DIR)
 
-def create_metadata():
-    video_paths = []
-    labels = []
+# =====================================================
+# DATASET ROOTS
+# =====================================================
 
-    for label_name in ["real", "fake"]:
-        folder_path = os.path.join(BASE_DIR, label_name)
+DATASETS = [
+    {
+        "real_dir": "data/raw/ffpp/real",
+        "fake_dir": "data/raw/ffpp/fake"
+    },
 
-        if not os.path.exists(folder_path):
-            print(f"⚠️ Folder not found: {folder_path}")
-            continue
+    # ADD MORE DATASETS HERE LATER
 
-        label = 0 if label_name == "real" else 1
+    # {
+    #     "real_dir": "data/raw/celebdf/real",
+    #     "fake_dir": "data/raw/celebdf/fake"
+    # },
+]
 
-        for file in os.listdir(folder_path):
-            if file.endswith(".mp4"):
-                full_path = os.path.join(folder_path, file)
 
-                video_paths.append(full_path)
-                labels.append(label)
+# =====================================================
+# SUPPORTED VIDEO FORMATS
+# =====================================================
 
-    df = pd.DataFrame({
-        "video_path": video_paths,
-        "label": labels
-    })
+VIDEO_EXTENSIONS = (
+    ".mp4",
+    ".avi",
+    ".mov",
+    ".mkv"
+)
 
-    output_path = os.path.join(os.path.dirname(__file__), "..", "data", "metadata.csv")
-    output_path = os.path.abspath(output_path)
 
-    df.to_csv(output_path, index=False)
+# =====================================================
+# CREATE METADATA
+# =====================================================
 
-    print("✅ Metadata created successfully!")
-    print(f"Saved at: {output_path}")
+metadata = []
 
-if __name__ == "__main__":
-    create_metadata()
+for dataset in DATASETS:
+
+    real_dir = dataset["real_dir"]
+    fake_dir = dataset["fake_dir"]
+
+    # =================================================
+    # REAL VIDEOS
+    # =================================================
+
+    if os.path.exists(real_dir):
+
+        for file_name in os.listdir(real_dir):
+
+            if file_name.lower().endswith(VIDEO_EXTENSIONS):
+
+                full_path = os.path.join(
+                    real_dir,
+                    file_name
+                )
+
+                metadata.append({
+                    "video_path": full_path.replace("\\", "/"),
+                    "label": 0
+                })
+
+    else:
+        print(f"[WARNING] Missing folder: {real_dir}")
+
+    # =================================================
+    # FAKE VIDEOS
+    # =================================================
+
+    if os.path.exists(fake_dir):
+
+        for file_name in os.listdir(fake_dir):
+
+            if file_name.lower().endswith(VIDEO_EXTENSIONS):
+
+                full_path = os.path.join(
+                    fake_dir,
+                    file_name
+                )
+
+                metadata.append({
+                    "video_path": full_path.replace("\\", "/"),
+                    "label": 1
+                })
+
+    else:
+        print(f"[WARNING] Missing folder: {fake_dir}")
+
+
+# =====================================================
+# SAVE CSV
+# =====================================================
+
+df = pd.DataFrame(metadata)
+
+os.makedirs("data", exist_ok=True)
+
+csv_path = "data/metadata.csv"
+
+df.to_csv(csv_path, index=False)
+
+
+# =====================================================
+# SUMMARY
+# =====================================================
+
+real_count = (df["label"] == 0).sum()
+fake_count = (df["label"] == 1).sum()
+
+print("\n===================================")
+
+print("Metadata CSV created successfully.")
+
+print(f"Saved to: {csv_path}")
+
+print(f"Total videos: {len(df)}")
+
+print(f"Real videos: {real_count}")
+
+print(f"Fake videos: {fake_count}")
+
+print("===================================\n")  

@@ -4,13 +4,21 @@ import numpy as np
 
 
 # -----------------------------------
-# CREATE TEMPORAL WINDOWS
+# CREATE SLIDING WINDOWS
 # -----------------------------------
-def create_windows(
-    signal,
-    window_size=180,
-    step_size=90
-):
+
+def create_windows(signal, window_size=180, stride=90):
+
+    """
+    signal shape:
+    (T, C)
+
+    Example:
+    (360, 5)
+
+    Output:
+    (num_windows, window_size, C)
+    """
 
     windows = []
 
@@ -19,7 +27,7 @@ def create_windows(
     for start in range(
         0,
         total_frames - window_size + 1,
-        step_size
+        stride
     ):
 
         end = start + window_size
@@ -28,6 +36,4 @@ def create_windows(
 
         windows.append(window)
 
-    windows = np.array(windows)
-
-    return windows
+    return np.array(windows)

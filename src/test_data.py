@@ -76,6 +76,10 @@ print("Filtered rPPG Shape:",
 print("rPPG Windows Shape:",
       sample["rppg_windows"].shape)
 
+print("Blink shape:", sample["blink_signal"].shape)
+
+print("Motion shape:", sample["motion_signal"].shape)
+
 print()
 
 print("Label:",
@@ -104,5 +108,25 @@ plt.title("Raw vs Filtered rPPG (POS Method)")
 plt.xlabel("Frame")
 
 plt.ylabel("Signal")
+
+plt.figure(figsize=(12, 4))
+
+plt.plot(sample["blink_signal"])
+
+plt.title("Blink EAR Signal")
+
+plt.xlabel("Frame")
+
+plt.ylabel("EAR")
+
+plt.figure(figsize=(12, 4))
+
+plt.plot(sample["motion_signal"])
+
+plt.title("Micro Motion Signal")
+
+plt.xlabel("Frame")
+
+plt.ylabel("Motion Magnitude")
 
 plt.show()
